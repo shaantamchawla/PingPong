@@ -35,5 +35,5 @@ while True:
     float1, float2 = get_motor_commands()
 
     print("Send message {}".format(i))
-    ser.write(('(' + str(float1) + ',' + str(float2) + ')').encode('utf-8'))
+    ser.write(('(' + str(float1) + ',' + str(float2) + ')\n').encode('utf-8'))
     time.sleep(1.0 / FREQ)
