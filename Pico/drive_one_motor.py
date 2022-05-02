@@ -9,7 +9,7 @@ from machine import Pin, Timer
 import time
 
 # Step info
-step_delay = 0.001 # in seconds - min delay allowable at full step
+FREQ = 480 # Hz
 
 # Define stepper motor GPIO connections:
 DIR_GPIO = 17
@@ -26,14 +26,14 @@ CW = 0
 # Set spin direction CW or CCW
 DIR.value(CCW)
 
+def spin_motor(timer):
+    PULSE.value(1)
+    PULSE.value(0)
+
 def main():
     led = Pin(25, Pin.OUT)
     led.toggle()
     
-    while True:
-        PULSE.value(1)
-        time.sleep(step_delay)
-        PULSE.value(0)
-        time.sleep(step_delay)
+    Timer().init(freq=FREQ, mode=Timer.PERIODIC, callback=spin_motor)
         
 main()
