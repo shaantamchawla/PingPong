@@ -2,7 +2,7 @@
 MicroProfessors
 04/26/2022
 
-Continuous rotation script for 1 motor
+Continuous rotation script for 1 motor PAIR
 
 Now testing dual core for multitasking — 1 for motor drive, 1 for toggle LED
 Dual core basics: https://circuitdigest.com/microcontroller-projects/dual-core-programming-on-raspberry-pi-pico-using-micropython
@@ -13,7 +13,7 @@ import time
 import _thread
 
 # Step info
-FREQ = 500 # Hz
+FREQ = 50 # Hz
 
 # Define stepper motor GPIO connections:
 DIR_GPIO = 17
@@ -28,7 +28,7 @@ CCW = 1
 CW = 0
     
 # Set spin direction CW or CCW
-DIR.value(CCW)
+DIR.value(CW)
 
 ## Threading for dual core
 sLock = _thread.allocate_lock()
@@ -63,5 +63,5 @@ def main():
         time.sleep(0.05)
         print("Toggling")
         sLock.release()
-        
+     
 main()
