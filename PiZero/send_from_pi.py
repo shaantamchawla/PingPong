@@ -13,7 +13,7 @@ import time
 import serial
 
 FREQ = 10 # Hz
-
+i = 0
 ser = serial.Serial(
   port='/dev/serial0', # Change this according to connection methods, e.g. /dev/ttyUSB0
   baudrate = 115200,
@@ -24,16 +24,9 @@ ser = serial.Serial(
 )
 
 ## This function will get filled-in to compute some motor commands based on ball trajectory
-def get_motor_commands():
-    float1, float2 = 3.0, 4.0
-    return float1, float2
-
-msg = ""
-i = 0
-while True:
+def update_commands(t,p,dt):
     i += 1
-    float1, float2 = get_motor_commands()
-
-    print("Send message {}".format(i))
-    ser.write(('(' + str(float1) + ',' + str(float2) + ')\n').encode('utf-8'))
-    time.sleep(1.0 / FREQ)
+    float1,float2,deltat = t,p,dt
+    ser.write(('(' + str(float1) + ',' + str(float2) + ',' + str(deltat) + ')\n').encode('utf-8'))
+#    print("Send message {}".format(i))
+#    time.sleep(1.0 / FREQ)

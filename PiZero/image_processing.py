@@ -12,6 +12,8 @@ import time
 import os
 import math
 
+from send_from_pi import update_commands
+
 
 class closed_loop_ctrl:
     def __init__(self):
@@ -30,23 +32,27 @@ class closed_loop_ctrl:
         x0,y0 = [0,0]
         tend = 2*period
         t0 = time.time()
-        t = t0
+        t = 0
         x = np.array([[x0,y0]])
+        times = []
         e_sum = 0
-        while t < t0+tend:
+        while t < tend:
             tp = t
-            t = time.time()
+            t = time.time()-t0
+            times = times + [t]
             dt = t-tp
             xb,yb,rb = self.process_frame(self.get_frame())
             v = np.subtract([xb,yb],x[-1,:])/dt
             x = np.append(x,[[xb,yb]],0)
             e_sum = e_sum + np.subtract([xt,yt],[xb,yb])
+            thout,phout = self.controller([xb,yb],[xt(t),yt(t)],v,e_sum)
+            self.update_command(thout,phout)
 
-            thout,phout = self.controller([xb,yb],[xt,yt],v,e_sum)
+        return x,times
 
 
-
-
+    def update_command(self,t,p,dt=1/self.cam.framerate):
+        update_commands(t,p,dt)
 
 
     def controller(x,xt,v,e_sum=[0,0],K=[6,0,-1]):

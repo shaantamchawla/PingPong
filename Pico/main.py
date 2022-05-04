@@ -11,3 +11,8 @@ Listen for motor commands from Pi Zero over UART rx / tx
 Continuously listens on an async rx / tx channel for computed motor commands.
 Will listen at a rate of FREQ and then drive motors at a rate of FREQ
 '''
+
+
+class stepper_controller():
+    def __init__(self):
+        self.motor_pos = [0,0,0,0]
