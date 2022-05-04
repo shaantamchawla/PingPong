@@ -10,14 +10,16 @@ import time
 import _thread
 
 # Step info
-FREQ = 50 # Hz
+FREQ = 100 # Hz
 
 # Define stepper motor GPIO connections:
-DIR_GPIO = 17
+DIR_2_GPIO = 18
+DIR_1_GPIO = 17
 PULSE_GPIO = 16
 
 # Declare pins as output
-DIR = Pin(DIR_GPIO, Pin.OUT)
+DIR_2 = Pin(DIR_2_GPIO, Pin.OUT)
+DIR_1 = Pin(DIR_1_GPIO, Pin.OUT)
 PULSE = Pin(PULSE_GPIO, Pin.OUT)
 
 ## Direction control
@@ -25,7 +27,8 @@ CCW = 1
 CW = 0
     
 # Set spin direction CW or CCW
-DIR.value(CW)
+DIR_1.value(CCW)
+DIR_2.value(CW)
 
 ## Threading for dual core
 #sLock = _thread.allocate_lock()
