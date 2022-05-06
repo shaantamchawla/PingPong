@@ -51,9 +51,8 @@ class closed_loop_ctrl:
         return x,times
 
 
-    def update_command(self,t,p,dt=1/self.cam.framerate):
+    def update_command(self,t,p,dt=1/30):
         update_commands(t,p,dt)
-        return None
 
 
     def controller(self,x,xt,v,e_sum=[0,0],K=[6,0,-1]):
