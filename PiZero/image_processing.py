@@ -75,7 +75,7 @@ class closed_loop_ctrl:
         return thout,phout          # absolute plate angles (theta --> x accel, phi --> y accel)
 
     def get_frame(self, prev=False):
-        cf = np.empty((res[0],res[1],3), dtype=np.uint8)    # 24 bit depth
+        cf = np.empty((self.res[0],self.res[1],3), dtype=np.uint8)    # 24 bit depth
         self.cam.capture(cf,'rgb')
         if prev:
             cv.imshow('frame',cf)
