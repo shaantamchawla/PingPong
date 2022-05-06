@@ -55,7 +55,7 @@ class closed_loop_ctrl:
         update_commands(t,p,dt)
 
 
-    def controller(x,xt,v,e_sum=[0,0],K=[6,0,-1]):
+    def controller(self,x,xt,v,e_sum=[0,0],K=[6,0,-1]):
         '''
         symmetric PID controllers in 2D. Default to no integration of error
         '''
