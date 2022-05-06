@@ -84,16 +84,19 @@ class closed_loop_ctrl:
         return cf
 
     def process_frame(self, cf, K_rgb=[0,0.4,1], prev=False):
-        pf = np.empty(shape(cf),dtype=np.uint8)
+        pf = np.empty(np.shape(cf),dtype=np.uint8)
         for k in range(0,3):
             pf[:,:,k] = K_rgb[k]*cf[:,:,k]
         pf = cv.cvtColor(pf, cv.COLOR_BGR2GRAY)
         pf = cv.convertScaleAbs(pf, alpha=3, beta=0)
         pf = cv.blur(pf, (4,4))
         circles = cv.HoughCircles(pf, cv.HOUGH_GRADIENT, 1, 100, param1 = 50, param2 = 40, minRadius=50,maxRadius=100)
-        circles = np.uint32(np.around(circles))
-        num_circ = 1
-        dat = circles[0]
+        if circles:
+            circles = np.uint32(np.around(circles))
+            num_circ = 1
+            dat = circles[0]
+        else:
+            dat = [0,0,0]
         if prev:
             cv.imshow('frame',pf)
             time.sleep(1)
