@@ -57,6 +57,8 @@ class stepper_controller():
     def loop(self):
         mt_deg,mt_step = self.angle_in_out(self.x_target)
         step_error = mt_step - self.motor_pos_steps[0]
+        while step_error > 0:
+            step
         return None
 
     def angle_in_out(self, plat_deg):
