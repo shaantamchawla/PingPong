@@ -83,14 +83,18 @@ class closed_loop_ctrl:
             cv.destroyAllWindows()
         return cf
 
-    def process_frame(self, cf, K_rgb=[0,0.4,1], prev=False):
+    def process_frame(self, cf, K_rgb=[0,0.4,1], prev=False, ret_im=False):
+        imout = cf
         pf = np.empty(shape(cf),dtype=np.uint8)
         for k in range(0,3):
             pf[:,:,k] = K_rgb[k]*cf[:,:,k]
         pf = cv.cvtColor(pf, cv.COLOR_BGR2GRAY)
+        imout = np.append(imout,pf,1)
         pf = cv.convertScaleAbs(pf, alpha=3, beta=0)
         pf = cv.blur(pf, (4,4))
+        imout = np.append(imout,pf,1)
         circles = cv.HoughCircles(pf, cv.HOUGH_GRADIENT, 1, 100, param1 = 50, param2 = 40, minRadius=50,maxRadius=100)
+        imout = np.append(imout,pf,1)
         circles = np.uint32(np.around(circles))
         num_circ = 1
         dat = circles[0]
@@ -98,4 +102,6 @@ class closed_loop_ctrl:
             cv.imshow('frame',pf)
             time.sleep(1)
             cv.destroyAllWindows()
+        if ret_im:
+            return dat,imout
         return dat
