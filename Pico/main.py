@@ -13,7 +13,7 @@ Will listen at a rate of FREQ and then drive motors at a rate of FREQ
 '''
 import numpy as np
 import math
-from listen_from_pi import *
+#from listen_from_pi import *
 
 # motors noted as follows
 # oriented top = away from control
@@ -43,9 +43,14 @@ class stepper_controller():
         self.ypins = np.array([[DIR_y1_GPIO,DIR_y2_GPIO],[PULSE_y1_GPIO,PULSE_y2_GPIO]])
         self.m_theta_rng = [-10,15]
         self.m_pulse_rng = np.multiply(self.m_theta_rng,pulse_frac)
-        self.zero_angle_deg = 30    # ADJUST
+        self.Lp = 160/1000
         self.La = 80/1000
         self.Lc = 80/1000
+        self.hm = 0.030
+        self.h0 = 0.150
+        self.bp = self.h0 - self.hm
+        self.zero_angle_deg = 48.5904
+
 
     def set_target(self,axis,deg):  # x --> 0    y --> 1
         if axis == 0:
@@ -63,10 +68,10 @@ class stepper_controller():
 
     def angle_in_out(self, plat_deg):
         r = self.Lp/2
-        h0 = 0.1   # ADJUST
+
         t_in = math.radians(plat_deg)
-        h = pow(pow(r*math.cos(-t_in)-r,2) + pow(r*math.sin(-t_in)-h0,2),1/2)
-        t_mot = math.pi - math.acos((pow(self.La,2)-pow(self.Lc,2)+pow(h,2))/(2*self.La*b)) - math.acos((pow(r,2)+pow(b,2)-pow(r*math.cos(t_in),2)-pow(r*math.sin(t_in)+h0,2)/(2*r*b))
+        b = pow(pow(r*math.cos(-t_in)-r,2) + pow(r*math.sin(-t_in)-self.bp,2),1/2)
+        t_mot = math.pi - math.acos((pow(self.La,2)-pow(self.Lc,2)+pow(b,2))/(2*self.La*b)) - math.acos((pow(r,2)+pow(b,2)-pow(r*math.cos(t_in),2)-pow(r*math.sin(t_in)+self.bp,2))/(2*r*b))
         mot_deg = math.degrees(t_mot)
         mot_deg = mot_deg - self.zero_angle_deg
         step_ind = round((mot_deg/360)*200*self.pulse_frac)
