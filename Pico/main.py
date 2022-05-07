@@ -77,6 +77,7 @@ class stepper_controller():
         self.set_target(1,6)
         while True:
             data_in = listen_for_commands()
+            print(data_in)
             time.sleep(0.001)
 
     def set_target(self,axis,deg):  # x --> 0    y --> 1
