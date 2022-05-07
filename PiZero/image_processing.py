@@ -46,13 +46,13 @@ class closed_loop_ctrl:
             x = np.append(x,[[xb,yb]],0)
             e_sum = e_sum + np.subtract([xt,yt],[xb,yb])
             thout,phout = self.controller([xb,yb],[xt(t),yt(t)],v,e_sum)
-            self.update_command(thout,phout)
+            self.update_command(xb, yb, rb, thout,phout)
 
         return x,times
 
-
-    def update_command(self,t,p,dt=1/30):
-        update_commands(t,p,dt)
+    ## calls function in send_from_pi to send stuff to pico
+    def update_command(self,x, y, r, t,p,dt=1/30):
+        update_commands(x, y, r, t,p,dt)
 
 
     def controller(self,x,xt,v,e_sum=[0,0],K=[6,0,-1]):

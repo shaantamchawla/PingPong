@@ -14,7 +14,7 @@ Will listen at a rate of FREQ and then drive motors at a rate of FREQ
 import math
 from machine import Pin, Timer
 import time
-#from listen_from_pi import *
+from listen_from_pi import listen_for_commands
 
 # motors noted as follows
 # oriented top = away from control
@@ -71,9 +71,12 @@ class stepper_controller():
 
     def start(self):
         Timer().init(freq=self.HIGH_FREQ, mode = Timer.PERIODIC, callback = self.x_ctrl_callback)
+        # begin listening from PiZero
+
         self.set_target(0,6)
         self.set_target(1,6)
         while True:
+            data_in = listen_for_commands()
             time.sleep(0.001)
 
     def set_target(self,axis,deg):  # x --> 0    y --> 1
