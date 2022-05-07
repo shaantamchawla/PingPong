@@ -12,14 +12,14 @@ import time
 import os
 import math
 
-from send_from_pi import update_commands
+from send_from_pi import send_commands
 
 
 class closed_loop_ctrl:
     def __init__(self):
         self.cam = pc.PiCamera()
         self.cam.framerate = 30
-        self.res = [320,240]
+        self.res = [960,720]
         self.cam.resolution = (self.res[0],self.res[1])
         self.deg_rng = 10   #symmetric (value for one side)
         self.Lp = 0.160     #platform sidelength
@@ -44,7 +44,7 @@ class closed_loop_ctrl:
             xb,yb,rb = self.process_frame(self.get_frame())
             v = np.subtract([xb,yb],x[-1,:])/dt
             x = np.append(x,[[xb,yb]],0)
-            e_sum = e_sum + np.subtract([xt,yt],[xb,yb])
+            e_sum = e_sum + np.subtract([xt(t),yt(t)],[xb,yb])
             thout,phout = self.controller([xb,yb],[xt(t),yt(t)],v,e_sum)
             self.update_command(xb, yb, rb, thout,phout)
 
@@ -52,7 +52,7 @@ class closed_loop_ctrl:
 
     ## calls function in send_from_pi to send stuff to pico
     def update_command(self,x, y, r, t,p,dt=1/30):
-        update_commands(x, y, r, t,p,dt)
+        send_commands(x, y, r, t,p,dt)
 
 
     def controller(self,x,xt,v,e_sum=[0,0],K=[6,0,-1]):
@@ -75,37 +75,43 @@ class closed_loop_ctrl:
         return thout,phout          # absolute plate angles (theta --> x accel, phi --> y accel)
 
     def get_frame(self, prev=False):
-        cf = np.empty((self.res[0],self.res[1],3), dtype=np.uint8)    # 24 bit depth
-        self.cam.capture(cf,'rgb')
+        cf = np.empty((self.res[1],self.res[0],3), dtype=np.uint8)    # 24 bit depth
+        self.cam.capture(cf,'bgr')
+        cv.imwrite('cf.jpg', cf)
         if prev:
             cv.imshow('frame',cf)
             time.sleep(1)
             cv.destroyAllWindows()
         return cf
 
-    def process_frame(self, cf, K_rgb=[0,0.4,1], prev=False, ret_im=False, min_radius=10, max_radius=50):
+    def process_frame(self, cf, K_rgb=[1,0.4,0], prev=False, ret_im=False, min_radius=80, max_radius=150):
         imout = cf
         pf = np.empty(np.shape(cf),dtype=np.uint8)
 
         for k in range(0,3):
-            pf[:,:,k] = K_rgb[k]*cf[:,:,k]
+            pf[:,:,k] = K_rgb[2-k]*cf[:,:,k]
         pf = cv.cvtColor(pf, cv.COLOR_BGR2GRAY)
         print(pf.shape)
         #imout = np.append(imout,np.array([[pf], [np.zeros(pf.shape)], [np.zeros(pf.shape)]]), 0)
-        pf = cv.convertScaleAbs(pf, alpha=3, beta=0)
+        pf = cv.convertScaleAbs(pf, alpha=8, beta=0)
         print(pf.shape)
         pf = cv.blur(pf, (4,4))
         #imout = np.append(imout,pf,1)
         circles = cv.HoughCircles(pf, cv.HOUGH_GRADIENT, 1, 100, param1 = 50, param2 = 40, minRadius=min_radius,maxRadius=max_radius)
         print(circles)
 
+#        cv.circle(pf, (circles[0], circle[1]
+
         if circles is not None:
             circles = np.uint32(np.around(circles))
             num_circ = 1
-            dat = circles[0]
+            dat = circles[0][0]
+            
+            cv.circle(pf, (dat[0], dat[1]), dat[2], (0,255,0),2)
+            cv.imwrite('pf.jpg', pf)
         else:
             dat = [0,0,0]
-
+        cv.imwrite('pf.jpg', pf)
         #imout = np.append(imout,pf,1)
 
         if prev:

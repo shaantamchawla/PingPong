@@ -24,7 +24,9 @@ ser = serial.Serial(
 )
 
 ## This function will get filled-in to compute some motor commands based on ball trajectory
-def send_commands(x, y, r):
-    ser.write(('(' + str(x) + ',' + str(y) + ',' + str(r) + ')\n').encode('utf-8'))
+def send_commands(x, y, r,th,ph,dt):
+    print(x,y,r,th,ph,dt)
+## TODO - get rid of spoofed data
+    ser.write(('(' + str(x) + ',' + str(y) + ',' + str(r) + ',' + str(th) + ',' + str(ph) + ')\n').encode('utf-8'))
 #    print("Send message {}".format(i))
 #    time.sleep(1.0 / FREQ)
