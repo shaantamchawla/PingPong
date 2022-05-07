@@ -14,7 +14,7 @@ Will listen at a rate of FREQ and then drive motors at a rate of FREQ
 import math
 from machine import Pin, Timer
 import time
-from listen_from_pi import listen_for_commands
+#from listen_from_pi import *
 
 # motors noted as follows
 # oriented top = away from control
@@ -48,6 +48,7 @@ PUL_y2 = Pin(PULSE_y2_GPIO, Pin.OUT)
 CCW = 1     # 'up' on positive motors (x1,y1)
 CW = 0      # 'down' on positive motors (x2,y2)
 
+
 class stepper_controller():
     def __init__(self,pulse_frac = 1):      # pulse_frac = denom of DIP setting (1/16 --> 16)
         self.pulse_frac = pulse_frac
@@ -66,6 +67,7 @@ class stepper_controller():
         self.bp = self.h0 - self.hm
         self.zero_angle_deg = 48.5904
         self.HIGH_FREQ = 100
+        self.uart = machine.UART(0, 115200)
 
         self.start()
 
@@ -76,27 +78,51 @@ class stepper_controller():
         self.set_target(0,6)
         self.set_target(1,6)
         while True:
-            data_in = listen_for_commands()
+            data_in = self.listen_for_commands()
             print(data_in)
-            time.sleep(0.001)
+            #if (data_in[2] == -1):
+            #    print("radius invalid")
+                
+            time.sleep(0.1)
 
     def set_target(self,axis,deg):  # x --> 0    y --> 1
         if axis == 0:
             self.x_target = deg
         if axis == 1:
             self.y_target = deg
+            
+    def listen_for_commands(self):
+        b = None
+        msg = ""
+        # print(self.uart.any())
+           
+        if self.uart.any() is not None:
+            b = self.uart.readline()
+
+            try:
+                msg = (str(b.decode('utf-8')))
+                
+                x, y, r, th, ph, dt = eval(msg)
+                return (x, y, r, th, ph, dt)
+
+    #motor_command_x, motor_command_y = (eval(msg))
+            except:
+                return (-1,-1,-1,-1,-1,-1)
+            
+        else:
+            return (-1,-1,-1,-1,-1,-1)
 
 
     def x_ctrl_callback(self, timer):
 
         mt_deg,mt_step = self.angle_in_out(self.x_target)
-        print(mt_deg, mt_step)
+        #print(mt_deg, mt_step)
         mt_deg_op,mt_step_op = self.angle_in_out(-1*self.x_target)
         step_error = mt_step - self.motor_pos_steps[0][0]
         step_error_op = mt_step_op - self.motor_pos_steps[0][1]
         
 
-        print(mt_step,self.motor_pos_steps[0][0],step_error)
+        #print(mt_step,self.motor_pos_steps[0][0],step_error)
         
         if step_error > 0:
             DIR_x1.value(CW)
@@ -124,7 +150,7 @@ class stepper_controller():
         step_error_op = mt_step_op - self.motor_pos_steps[1][1]
         
 
-        print(mt_step,self.motor_pos_steps[1][0],step_error)
+        #print(mt_step,self.motor_pos_steps[1][0],step_error)
         
         if step_error > 0:
             DIR_y1.value(CW)
@@ -157,3 +183,5 @@ class stepper_controller():
     
 a = stepper_controller(pulse_frac = 8)
 a.start()
+
+
