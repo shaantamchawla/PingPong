@@ -65,7 +65,7 @@ class stepper_controller():
         self.h0 = 0.150
         self.bp = self.h0 - self.hm
         self.zero_angle_deg = 48.5904
-        self.HIGH_FREQ = 50
+        self.HIGH_FREQ = 100
 
         self.start()
 
@@ -155,5 +155,5 @@ class stepper_controller():
         return mot_deg, step_ind  # relative to init
     
     
-a = stepper_controller(pulse_frac = 2)
+a = stepper_controller(pulse_frac = 8)
 a.start()
