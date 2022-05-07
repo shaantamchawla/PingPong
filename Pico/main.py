@@ -65,16 +65,15 @@ class stepper_controller():
         self.h0 = 0.150
         self.bp = self.h0 - self.hm
         self.zero_angle_deg = 48.5904
-        self.HIGH_FREQ = 50
+        self.HIGH_FREQ = 100
 
         self.start()
 
     def start(self):
         Timer().init(freq=self.HIGH_FREQ, mode = Timer.PERIODIC, callback = self.x_ctrl_callback)
-        self.set_target(0,6)
-        self.set_target(1,6)
-        while True:
-            time.sleep(0.001)
+        self.set_target(0,4)
+        self.set_target(1,4)
+            
 
     def set_target(self,axis,deg):  # x --> 0    y --> 1
         if axis == 0:
@@ -151,5 +150,5 @@ class stepper_controller():
         return mot_deg, step_ind  # relative to init
     
     
-a = stepper_controller(pulse_frac = 2)
+a = stepper_controller(pulse_frac = 8)
 a.start()
