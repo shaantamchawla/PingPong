@@ -14,19 +14,21 @@ import serial
 
 FREQ = 10 # Hz
 i = 0
-ser = serial.Serial(
+
+def send_commands(x,y,r,th,ph,dt):
+    ser = serial.Serial(
   port='/dev/serial0', # Change this according to connection methods, e.g. /dev/ttyUSB0
   baudrate = 115200,
   parity=serial.PARITY_NONE,
   stopbits=serial.STOPBITS_ONE,
   bytesize=serial.EIGHTBITS,
   timeout=1
-)
+    )
 
 ## This function will get filled-in to compute some motor commands based on ball trajectory
-def send_commands(x, y, r,th,ph,dt):
+#def send_commands(x, y, r,th,ph,dt):
     print(x,y,r,th,ph,dt)
 ## TODO - get rid of spoofed data
-    ser.write(('(' + str(x) + ',' + str(y) + ',' + str(r) + ',' + str(th) + ',' + str(ph) + ')\n').encode('utf-8'))
+    ser.write(('(' + str(x) + ',' + str(y) + ',' + str(r) + ',' + str(th) + ',' + str(ph) + ',' + str(dt) + ')\n').encode('utf-8'))
 #    print("Send message {}".format(i))
 #    time.sleep(1.0 / FREQ)
