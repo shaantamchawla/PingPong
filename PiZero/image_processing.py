@@ -118,6 +118,7 @@ class closed_loop_ctrl:
         if circles is not None:
             circles = np.uint32(np.around(circles))
             num_circ = 1
+
             dat = [float(k) for k in circles[0][0]]
             dat[0:2] = [dat[0]-self.res[0]/2, dat[1]-self.res[1]/2]
             dat[0:2] = [dat[0]*self.Kpc, dat[1]*self.Kpc]
@@ -126,6 +127,7 @@ class closed_loop_ctrl:
             cv.circle(pf, (cdat[0], cdat[1]), cdat[2], (0,255,0),2)
             cv.imwrite('./ims/pf.jpg', pf)
 #            print(dat)
+
 
         else:
             dat = [0,0,0]
