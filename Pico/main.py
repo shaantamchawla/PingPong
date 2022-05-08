@@ -57,8 +57,8 @@ class stepper_controller():
         self.y_target = 0
         self.xpins = [[DIR_x1, PUL_x1],[DIR_x2, PUL_x2]]
         self.ypins = [[DIR_y1, PUL_y1],[DIR_y2, PUL_y2]]
-        self.m_theta_rng = [-10,10]
-        self.m_pulse_rng = [-10*pulse_frac,10*pulse_frac]
+        self.m_theta_rng = [-7,7]
+        self.m_pulse_rng = [-self.m_theta_rng[0]*pulse_frac,self.m_theta_rng[1]*pulse_frac]
         self.Lp = 315/1000
         self.La = 80/1000
         self.Lc = 80/1000
@@ -66,92 +66,78 @@ class stepper_controller():
         self.h0 = 0.150
         self.bp = self.h0 - self.hm
         self.zero_angle_deg = 48.5904
-        self.HIGH_FREQ = 100
-        self.uart = machine.UART(0, 115200)
+        self.HIGH_FREQ = 120
+        self.uart = machine.UART(0, 115200, timeout = 200)
 
         self.start()
 
     def start(self):
-        Timer().init(freq=self.HIGH_FREQ, mode = Timer.PERIODIC, callback = self.x_ctrl_callback)
+        Timer().init(freq=self.HIGH_FREQ, mode = Timer.PERIODIC, callback = self.y_ctrl_callback)
         # begin listening from PiZero
-
-        self.set_target(0,6)
-        self.set_target(1,6)
+        self.set_target(0,0)
+        self.set_target(1,0)
         while True:
             data_in = self.listen_for_commands()
-            print(data_in)
-            #if (data_in[2] == -1):
-            #    print("radius invalid")
-                
-            time.sleep(0.1)
+            #print(data_in)
+            if (data_in[2] != 0 and data_in[2] != -1):
+                self.set_target(0,data_in[-3])
+                self.set_target(1,data_in[-2])
+#            time.sleep(0.0001)
 
     def set_target(self,axis,deg):  # x --> 0    y --> 1
         if axis == 0:
             self.x_target = deg
         if axis == 1:
             self.y_target = deg
-            
+        print(self.x_target, self.y_target)
+
     def listen_for_commands(self):
         b = None
         msg = ""
-        # print(self.uart.any())
-           
-        if self.uart.any() is not None:
+
+        if self.uart.any() != 0:
             b = self.uart.readline()
-
-            try:
-                msg = (str(b.decode('utf-8')))
-                
-                x, y, r, th, ph, dt = eval(msg)
-                return (x, y, r, th, ph, dt)
-
-    #motor_command_x, motor_command_y = (eval(msg))
-            except:
-                return (-1,-1,-1,-1,-1,-1)
-            
+            msg = str(b.decode('utf-8'))
+            msg = msg.split(',')
+            x, y, r, th, ph, dt = [float(k) for k in msg]
+            return (x, y, r, th, ph, dt)
         else:
             return (-1,-1,-1,-1,-1,-1)
 
 
-    def x_ctrl_callback(self, timer):
-
+    def y_ctrl_callback(self, timer):
         mt_deg,mt_step = self.angle_in_out(self.x_target)
-        #print(mt_deg, mt_step)
         mt_deg_op,mt_step_op = self.angle_in_out(-1*self.x_target)
-        step_error = mt_step - self.motor_pos_steps[0][0]
-        step_error_op = mt_step_op - self.motor_pos_steps[0][1]
+        step_error = round(mt_step) - self.motor_pos_steps[0][0]
+        step_error_op = round(mt_step_op) - self.motor_pos_steps[0][1]
         
 
-        #print(mt_step,self.motor_pos_steps[0][0],step_error)
-        
         if step_error > 0:
-            DIR_x1.value(CW)
-            DIR_x2.value(CCW)
-        else:
             DIR_x1.value(CCW)
             DIR_x2.value(CW)
+        else:
+            DIR_x1.value(CW)
+            DIR_x2.value(CCW)
 
         if abs(step_error) > 0:
+            #print(step_error)
             PUL_x1.value(1)
             PUL_x2.value(1)
             time.sleep(0.001)
             PUL_x1.value(0)
             PUL_x2.value(0)
-            self.motor_pos_steps[0][0] += 1*(step_error/abs(step_error))
-            self.motor_pos_steps[0][1] -= 1*(step_error/abs(step_error))
-            
-        self.y_ctrl_callback(0)
+            self.motor_pos_steps[0][0] -= pow(-1,(step_error>0))
+            self.motor_pos_steps[0][1] += pow(-1,(step_error>0))
 
-    def y_ctrl_callback(self, timer):
+        self.x_ctrl_callback(0)
+
+    def x_ctrl_callback(self, timer):
 
         mt_deg,mt_step = self.angle_in_out(self.y_target)
         mt_deg_op,mt_step_op = self.angle_in_out(-1*self.y_target)
         step_error = mt_step - self.motor_pos_steps[1][0]
         step_error_op = mt_step_op - self.motor_pos_steps[1][1]
-        
 
-        #print(mt_step,self.motor_pos_steps[1][0],step_error)
-        
         if step_error > 0:
             DIR_y1.value(CW)
             DIR_y2.value(CCW)
@@ -160,28 +146,26 @@ class stepper_controller():
             DIR_y2.value(CW)
 
         if abs(step_error) > 0:
+            #print(step_error)
             PUL_y1.value(1)
             PUL_y2.value(1)
             time.sleep(0.001)
             PUL_y1.value(0)
             PUL_y2.value(0)
-            self.motor_pos_steps[1][0] += 1*(step_error/abs(step_error))
-            self.motor_pos_steps[1][1] -= 1*(step_error/abs(step_error))            
+            self.motor_pos_steps[1][0] -= pow(-1,(step_error>0))
+            self.motor_pos_steps[1][1] += pow(-1,(step_error>0))
 
 
     def angle_in_out(self, plat_deg):
         r = self.Lp/2
-
-        t_in = math.radians(plat_deg)
+        t_in = plat_deg
+#        t_in = math.radians(plat_deg)
         b = pow(pow(r*math.cos(-t_in)-r,2) + pow(r*math.sin(-t_in)-self.bp,2),1/2)
-        t_mot = math.pi - math.acos((pow(self.La,2)-pow(self.Lc,2)+pow(b,2))/(2*self.La*b)) - math.acos((pow(r,2)+pow(b,2)-pow(r*math.cos(t_in),2)-pow(r*math.sin(t_in)+self.bp,2))/(2*r*b))
+        t_mot = math.pi - math.acos(pow(b,2)/(2*self.La*b)) - math.acos((pow(r,2)+pow(b,2)-pow(r*math.cos(t_in),2)-pow(r*math.sin(t_in)+self.bp,2))/(2*r*b))
         mot_deg = math.degrees(t_mot)
         mot_deg = mot_deg - self.zero_angle_deg
         step_ind = round((mot_deg/360)*200*self.pulse_frac)
         return mot_deg, step_ind  # relative to init
-    
-    
-a = stepper_controller(pulse_frac = 8)
-a.start()
 
 
+a = stepper_controller(pulse_frac = 16)

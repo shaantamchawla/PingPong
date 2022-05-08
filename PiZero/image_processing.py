@@ -106,7 +106,7 @@ class closed_loop_ctrl:
             circles = np.uint32(np.around(circles))
             num_circ = 1
             dat = circles[0][0]
-            
+
             cv.circle(pf, (dat[0], dat[1]), dat[2], (0,255,0),2)
             cv.imwrite('pf.jpg', pf)
         else:
