@@ -19,18 +19,23 @@ class closed_loop_ctrl:
     def __init__(self):
         self.cam = pc.PiCamera()
         self.cam.framerate = 30
-        self.res = [960,720]
+        self.res = [256,240]
         self.cam.resolution = (self.res[0],self.res[1])
         self.deg_rng = 10   #symmetric (value for one side)
         self.Lp = 0.160     #platform sidelength
+        self.Kpc = 0.160/(144*self.res[0]/155)
+        self.ballpx = round((50/480)*self.res[0])
 
-    def runout(self):
+    def runout(self, t=10):
         r = self.Lp/0.8
         period = 5
-        xt = lambda t: r*math.cos(2*math.pi*(t/period))
-        yt = lambda t: r*math.sin(2*math.pi*(t/period))
+#        xt = lambda t: r*math.cos(2*math.pi*(t/period))
+#        yt = lambda t: r*math.sin(2*math.pi*(t/period))
+        xt = lambda t: 0
+        yt = lambda t: 0
+
         x0,y0 = [0,0]
-        tend = 2*period
+        tend = t
         t0 = time.time()
         t = 0
         x = np.array([[x0,y0]])
@@ -41,8 +46,14 @@ class closed_loop_ctrl:
             t = time.time()-t0
             times = times + [t]
             dt = t-tp
-            xb,yb,rb = self.process_frame(self.get_frame())
-            v = np.subtract([xb,yb],x[-1,:])/dt
+            xb,yb,rb = self.process_frame(self.get_frame(), min_radius = self.ballpx-15, max_radius = self.ballpx+15)
+            dead = 0.01
+#            xb = max(-dead, min(xb, dead))
+#            yb = max(-dead, min(yb, dead))
+            vlim = 0.015
+            vx = min(vlim, max(np.subtract(xb,x[-1,0])/dt, -vlim))
+            vy = min(vlim, max((yb-x[-1,1])/dt, -vlim))
+            v = [vx,vy]
             x = np.append(x,[[xb,yb]],0)
             e_sum = e_sum + np.subtract([xt(t),yt(t)],[xb,yb])
             thout,phout = self.controller([xb,yb],[xt(t),yt(t)],v,e_sum)
@@ -55,7 +66,7 @@ class closed_loop_ctrl:
         send_commands(x, y, r, t,p,dt)
 
 
-    def controller(self,x,xt,v,e_sum=[0,0],K=[6,0,-1]):
+    def controller(self,x,xt,v,e_sum=[0,0],K=[10,0,0]):
         '''
         symmetric PID controllers in 2D. Default to no integration of error
         '''
@@ -77,38 +88,45 @@ class closed_loop_ctrl:
     def get_frame(self, prev=False):
         cf = np.empty((self.res[1],self.res[0],3), dtype=np.uint8)    # 24 bit depth
         self.cam.capture(cf,'bgr')
-        cv.imwrite('cf.jpg', cf)
+        cv.imwrite('./ims/cf.jpg', cf)
         if prev:
             cv.imshow('frame',cf)
             time.sleep(1)
             cv.destroyAllWindows()
         return cf
 
-    def process_frame(self, cf, K_rgb=[1,0.4,0], prev=False, ret_im=False, min_radius=80, max_radius=150):
+    def process_frame(self, cf, K_rgb=[1,1,1], prev=False, ret_im=False, min_radius=35, max_radius=60):
         imout = cf
         pf = np.empty(np.shape(cf),dtype=np.uint8)
 
         for k in range(0,3):
             pf[:,:,k] = K_rgb[2-k]*cf[:,:,k]
-        pf = cv.cvtColor(pf, cv.COLOR_BGR2GRAY)
-        print(pf.shape)
+        pf = cv.cvtColor(pf, cv.COLOR_BGR2HSV)
+        pf = pf[:,:,2]
+       
         #imout = np.append(imout,np.array([[pf], [np.zeros(pf.shape)], [np.zeros(pf.shape)]]), 0)
-        pf = cv.convertScaleAbs(pf, alpha=8, beta=0)
-        print(pf.shape)
-        pf = cv.blur(pf, (4,4))
+        #pf = cv.convertScaleAbs(pf, alpha=-2, beta=10)
+        pf = 255 - pf
+#        pf = cv.convertScaleAbs(pf, alpha = 1, beta = -80)
+#        pf = cv.blur(pf, (4,4))
+        cv.imwrite('./ims/pf.jpg',pf)
         #imout = np.append(imout,pf,1)
         circles = cv.HoughCircles(pf, cv.HOUGH_GRADIENT, 1, 100, param1 = 50, param2 = 40, minRadius=min_radius,maxRadius=max_radius)
-        print(circles)
 
 #        cv.circle(pf, (circles[0], circle[1]
 
         if circles is not None:
             circles = np.uint32(np.around(circles))
             num_circ = 1
-            dat = circles[0][0]
-            
-            cv.circle(pf, (dat[0], dat[1]), dat[2], (0,255,0),2)
-            cv.imwrite('pf.jpg', pf)
+            dat = [float(k) for k in circles[0][0]]
+            dat[0:2] = [dat[0]-self.res[0]/2, dat[1]-self.res[1]/2]
+            dat[0:2] = [dat[0]*self.Kpc, dat[1]*self.Kpc]
+            cdat = circles[0][0]
+            print(dat[2])
+            cv.circle(pf, (cdat[0], cdat[1]), cdat[2], (0,255,0),2)
+            cv.imwrite('./ims/pf.jpg', pf)
+#            print(dat)
+
         else:
             dat = [0,0,0]
         cv.imwrite('pf.jpg', pf)
@@ -121,3 +139,9 @@ class closed_loop_ctrl:
         if ret_im:
             return dat,imout
         return dat
+
+
+
+
+c = closed_loop_ctrl()
+c.runout(t=300)

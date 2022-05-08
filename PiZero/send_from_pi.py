@@ -12,7 +12,7 @@ Wiring: TX on PiZero -> RX on Pico. RX on PiZero -> TX on Pico.
 import time
 import serial
 
-FREQ = 10 # Hz
+FREQ = 30 # Hz
 i = 0
 
 def send_commands(x,y,r,th,ph,dt):
@@ -24,11 +24,13 @@ def send_commands(x,y,r,th,ph,dt):
   bytesize=serial.EIGHTBITS,
   timeout=1
     )
-
-## This function will get filled-in to compute some motor commands based on ball trajectory
-#def send_commands(x, y, r,th,ph,dt):
-    print(x,y,r,th,ph,dt)
+    [x,y,r,th,ph,dt] = [round(k,4) for k in [x,y,r,th,ph,dt]]
+    #print(x,y,r,th,ph,dt)
 ## TODO - get rid of spoofed data
-    ser.write(('(' + str(x) + ',' + str(y) + ',' + str(r) + ',' + str(th) + ',' + str(ph) + ',' + str(dt) + ')\n').encode('utf-8'))
+    dat = str(x)+','+str(y)+','+str(r)+','+str(th)+','+str(ph)+','+str(dt)+'\n'
+    print(x,y)
+    print(th,ph)
+    print()
+    ser.write(dat.encode('utf-8'))
 #    print("Send message {}".format(i))
 #    time.sleep(1.0 / FREQ)
