@@ -22,7 +22,8 @@ class FrontPanel:
 		print('alternative textbox contains {}'.format(final))
 
 	def button_callback(self):
-		str_to_write = str(self.entry.final) + ',' + str(self.entry2.final) + '\n'
+		override = 1
+		str_to_write = str(override) + str(self.entry.final) + ',' + str(self.entry2.final) + '\n'
 		print('button pressed, textbox contains {}'.format(self.entry.final))
 		print(str_to_write)
 
