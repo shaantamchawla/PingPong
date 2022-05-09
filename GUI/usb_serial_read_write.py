@@ -36,7 +36,7 @@ def listen_for_commands():
         input_line = ""
     
     ## default = read from pi zero
-    return "-1,-2,-3,-4,-5,-6"
+    return "10,12,13,14,15,16"
 
 def send_state_to_serial():
     data_out = listen_for_commands()
