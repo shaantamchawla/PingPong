@@ -36,6 +36,13 @@ class FrontPanel:
 	def print_on_enter(self, id, final):
 		print('enter pressed, textbox contains {}'.format(final))
 
+	def drawStyleRect(self, surface):
+		x,y = 200,500
+		pygame.draw.rect(surface, (255,255,127), (x,y,400,300), 0)
+		
+		for i in range(4):
+			pygame.draw.rect(surface, (0,0,0), (x-i,y-i,405,305), 1)
+
 	def render_circle(self):
 		import random
         #for grid system
@@ -62,7 +69,7 @@ class FrontPanel:
 		text_surface2 = my_font.render('Motor Y control', False, (0, 0, 0))
 		self.screen.blit(text_surface2, (175,360))
 
-		text_surface3 = my_font.render('Circle Path', False, (0, 0, 0))
+		text_surface3 = my_font.render('Ping Pong Ball Tracker', False, (0, 0, 0))
 		self.screen.blit(text_surface3, (175,460))
 
 		self.entry_settings = {
@@ -79,6 +86,8 @@ class FrontPanel:
 
 		#change its background color
 		self.myNewSurface.fill((55,155,255))
+
+		self.drawStyleRect(self.screen)
 
 		#see all settings help(pygooey.Button.__init__)
 		btn_settings = {
