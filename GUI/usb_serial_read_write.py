@@ -3,7 +3,7 @@
 
 from machine import UART, Pin
 import time
-import sys
+import sys, uselect
 
 ## Offline debugging function to ensure Pico is alive
 def blink_led():
@@ -12,10 +12,28 @@ def blink_led():
     time.sleep(0.1)
 
 def listen_for_commands():
+    buff = []
+    
     ## see if we have anything from GUI, over usb
-    # msg_usb = sys.stdin.readline()
+    file = open('log.txt', 'a')
+    select_result = uselect.select([sys.stdin], [], [], 0)
+    while select_result[0]:
+        input_character = sys.stdin.read(1)
+        buff.append(input_character)
+        select_result = uselect.select([sys.stdin], [], [], 0)
         
-    #print(msg_usb)
+    if '\n' in buff:
+        blink_led()
+        end_index = buff.index('\n')
+        input_line = "".join(buff[:end_index])
+        return str(input_line)
+        
+        if end_index < len(buff):
+            buff = buff[end_index + 1 :]
+        else:
+            buff = []
+    else:
+        input_line = ""
     
     ## default = read from pi zero
     return "-1,-2,-3,-4,-5,-6"
