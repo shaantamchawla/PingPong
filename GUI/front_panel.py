@@ -114,7 +114,12 @@ class FrontPanel:
 
 			if len(self.data_in) == self.message_length: ## Validate packet
 				self.x, self.y, self.r, self.th, self.ph, self.dt = [float(val) for val in self.data_in]
-				print(self.x, self.y, self.r, self.th, self.ph, self.dt)
+				print(self.x,   self.y, self.r, self.th, self.ph, self.dt)
+				print("x,   y,   r,   th,  ph,  dt")
+				# x=55,y=64,r=87,th=2,ph=-3,dt=0.033333
+
+			else:
+				print(self.data_in)
 
 			# for loop through the event queue
 			for event in pygame.event.get():
